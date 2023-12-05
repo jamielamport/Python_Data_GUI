@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QFileDialog, QDateEdit, QLabel
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QFileDialog, QDateEdit, QLabel, QComboBox
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -37,6 +37,15 @@ class TemperatureGraphApp(QMainWindow):
 
         self.layout.addWidget(self.start_date_edit)
         self.layout.addWidget(self.end_date_edit)
+
+        # Graph type selection
+        graph_type_label = QLabel("Select Graph Type:", self)
+        graph_type_label.setFont(QFont("Arial", 12))
+        self.layout.addWidget(graph_type_label)
+
+        self.graph_type_combobox = QComboBox(self)
+        self.graph_type_combobox.addItems(['Line Plot', 'Scatter Plot'])  # Add more types as needed
+        self.layout.addWidget(self.graph_type_combobox)
 
         # Graph display area
         self.fig, self.ax = plt.subplots()
@@ -77,9 +86,11 @@ class TemperatureGraphApp(QMainWindow):
         # DataFrame variable to store loaded data
         self.df = None
 
-        # Connect dateChanged signals to update graph when date selections change
+        # Connect signals to update graph when selections change
         self.start_date_edit.dateChanged.connect(self.update_graph)
         self.end_date_edit.dateChanged.connect(self.update_graph)
+        self.graph_type_combobox.currentIndexChanged.connect(self.update_graph)
+
 
     def load_data(self):
         file_dialog = QFileDialog(self)
@@ -108,7 +119,19 @@ class TemperatureGraphApp(QMainWindow):
 
             # Plot the data
             self.ax.clear()
-            self.ax.plot(filtered_df['Date'], filtered_df['Temperature'], marker='o', linestyle='-', color='#3498db')
+
+            # Determine the graph type based on the selected index
+            graph_type_index = self.graph_type_combobox.currentIndex()
+            if graph_type_index == 0:
+                # Line Plot
+                self.ax.plot(filtered_df['Date'], filtered_df['Temperature'], marker='o', linestyle='-',
+                             color='#3498db')
+            elif graph_type_index == 1:
+                # Scatter Plot
+                self.ax.scatter(filtered_df['Date'], filtered_df['Temperature'], color='#e74c3c', marker='o')
+
+            #self.ax.plot(filtered_df['Date'], filtered_df['Temperature'], marker='o', linestyle='-', color='#3498db')
+
             self.ax.set_title('Temperature Over Time')
             self.ax.set_xlabel('Date')
             self.ax.set_ylabel('Temperature (°C)')
